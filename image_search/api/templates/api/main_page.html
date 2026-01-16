@@ -1,0 +1,395 @@
+{% block extra_head %}
+<style>
+    :root {
+        --primary-color: #ff9000;
+        --bg-dark: #0a0a0a;
+        --card-bg: rgba(17, 17, 17, 0.7);
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-dark);
+        color: #fff;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        overflow: hidden;
+    }
+
+    /* 背景画布 */
+    #canvas-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    /* 顶部导航栏 - 磨砂效果 */
+    .header-nav {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 25px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-sizing: border-box;
+        z-index: 10;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    }
+
+    .brand-logo-static {
+        font-size: 1.2rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+    }
+
+    .brand-highlight {
+        background: var(--primary-color);
+        color: #000;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+        margin-left: 4px;
+        box-shadow: 0 0 15px rgba(255,144,0,0.3);
+    }
+
+    .top-right-links a {
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s;
+        margin-left: 20px;
+    }
+
+    .top-right-links a:hover {
+        color: var(--primary-color);
+    }
+
+    /* 主容器 */
+    .upload-container {
+        position: relative;
+        z-index: 2;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .upload-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    /* 上传框 - 玻璃拟态 */
+    .upload-box {
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 60px 40px;
+        width: 100%;
+        max-width: 550px;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        animation: fadeInUp 1s ease 0.2s both;
+    }
+
+    .upload-box:hover {
+        border-color: var(--primary-color);
+        background: rgba(25, 25, 25, 0.8);
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    #file-input { display: none; }
+
+    .upload-icon {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        color: var(--primary-color);
+        transition: transform 0.3s ease;
+    }
+
+    .upload-box:hover .upload-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .upload-hint {
+        color: rgba(255,255,255,0.5);
+        font-size: 1.1rem;
+    }
+
+    /* 图片预览动画 */
+    #image-preview {
+        max-width: 100%;
+        max-height: 320px;
+        border-radius: 12px;
+        object-fit: contain;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        animation: zoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes zoomIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* 提交按钮 */
+    .btn-submit {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 15px 50px;
+        font-size: 1.2rem;
+        font-weight: 800;
+        border-radius: 50px;
+        cursor: pointer;
+        margin-top: 40px;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(255,144,0,0.2);
+        animation: fadeInUp 1.2s ease 0.4s both;
+    }
+
+    .btn-submit:hover {
+        transform: scale(1.05) translateY(-2px);
+        background: #ffaa33;
+        box-shadow: 0 15px 30px rgba(255,144,0,0.4);
+    }
+
+    /* 示例按钮 */
+    .example-btn {
+        position: absolute;
+        bottom: 40px;
+        left: 40px;
+        z-index: 10;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.6);
+        padding: 10px 25px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s;
+    }
+
+    .example-btn:hover {
+        border-color: #fff;
+        color: #fff;
+        background: rgba(255,255,255,0.1);
+    }
+    /* ===== 结果数量选择条 ===== */
+    .result-count-wrapper {
+        margin-top: 25px;
+        padding: 12px 26px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: fadeInUp 1.1s ease 0.3s both;
+    }
+
+    .result-count-label {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 0.5px;
+    }
+
+    .result-count-select {
+        appearance: none;
+        background: rgba(0,0,0,0.35);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 20px;
+        padding: 6px 34px 6px 16px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+    }
+
+    .result-count-select:hover {
+        border-color: var(--primary-color);
+    }
+
+    .result-count-select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255,144,0,0.25);
+    }
+    /* 历史记录按钮 */
+    .history-btn {
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+        z-index: 10;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.6);
+        padding: 10px 25px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s;
+    }
+
+    .history-btn:hover {
+        border-color: var(--primary-color);
+        color: #fff;
+        background: rgba(255,255,255,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<canvas id="canvas-particles"></canvas>
+
+<header class="header-nav">
+    <div class="brand-logo-static">
+        智能图像<span class="brand-highlight">相似搜索</span>
+    </div>
+
+    <div class="top-right-links">
+        {% if user.is_authenticated %}
+            <span style="color: rgba(255,255,255,0.4);">Hi, {{ user.username }}</span>
+            <a href="{% url 'logout_view' %}">退出</a>
+            <a href="{% url 'delete_account' %}" style="color: #ff4444;">注销</a>
+        {% else %}
+            <a href="{% url 'login' %}">登录</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="upload-container">
+    <div class="upload-title">开启 AI 视觉搜索</div>
+
+    <form action="{% url 'upload_image' %}" method="post" enctype="multipart/form-data" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        {% csrf_token %}
+
+        <label for="file-input" class="upload-box" id="drop-zone">
+            <div id="upload-placeholder">
+                <div class="upload-icon">✦</div>
+                <div class="upload-hint">将图像文件拖至此处</div>
+                <p style="color: #444; font-size: 0.8rem; margin-top: 10px;">支持 JPG, PNG, WEBP</p>
+            </div>
+
+            <img id="image-preview" src="" alt="Preview">
+
+            <input type="file" name="image" id="file-input" accept="image/*" onchange="previewImage()">
+
+            <div id="file-name" style="margin-top: 15px; color: var(--primary-color); font-weight: 600; font-size: 0.9rem;"></div>
+        </label>
+        <div class="result-count-wrapper">
+            <span class="result-count-label">返回结果数量</span>
+            <select name="top_k" class="result-count-select">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-submit">
+            立即识别
+        </button>
+    </form>
+</div>
+
+<a href="/example" class="example-btn">查看示例检索结果</a>
+{% if user.is_authenticated %}
+<a href="{% url 'history' %}" class="history-btn">历史记录</a>
+{% endif %}
+<script>
+    // 粒子背景逻辑 (与登录注册保持同步)
+    const canvas = document.getElementById('canvas-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.radius = Math.random() * 1.5;
+        }
+        draw() {
+            ctx.fillStyle = 'rgba(255, 144, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        update() {
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+    }
+
+    function init() { particles = []; for (let i = 0; i < 60; i++) particles.push(new Particle()); }
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update(); particles[i].draw();
+            for (let j = i + 1; j < particles.length; j++) {
+                const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                if (dist < 150) {
+                    ctx.strokeStyle = `rgba(255, 144, 0, ${1 - dist/150 - 0.7})`;
+                    ctx.lineWidth = 0.5; ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    init(); animate();
+
+    // 图片预览增强逻辑
+    function previewImage() {
+        const input = document.getElementById('file-input');
+        const preview = document.getElementById('image-preview');
+        const placeholder = document.getElementById('upload-placeholder');
+        const nameDisplay = document.getElementById('file-name');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                nameDisplay.textContent = "✔ " + input.files[0].name;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

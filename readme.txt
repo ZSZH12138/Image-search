@@ -1,0 +1,5 @@
+以上两个文件夹对应了项目的不同部分。
+deep_learning_parts对应了数据准备的部分。
+image_search对应了服务器构建的部分。
+report_code对应了实验报告代码的部分。
+三个部分都有对应的readme 注意：deep_learning_parts的readme我有进行修改 并非原封不动。

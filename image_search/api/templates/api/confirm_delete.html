@@ -1,0 +1,235 @@
+{% block extra_head %}
+<style>
+    :root {
+        --danger-color: #ff4444;
+        --primary-color: #ff9000;
+        --bg-dark: #0a0a0a;
+        --card-bg: rgba(17, 17, 17, 0.7);
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-dark);
+        color: #fff;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        overflow: hidden;
+    }
+
+    #canvas-particles {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
+
+    .header-nav {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 25px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    }
+
+    .brand-logo-static {
+        font-size: 1.2rem;
+        font-weight: 900;
+    }
+
+    .brand-highlight {
+        background: var(--primary-color);
+        color: #000;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+        margin-left: 4px;
+    }
+
+    .top-right-links a {
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-left: 20px;
+        transition: color 0.3s;
+    }
+
+    .top-right-links a:hover {
+        color: var(--primary-color);
+    }
+
+    .upload-container {
+        position: relative;
+        z-index: 2;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .confirm-box {
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border-radius: 26px;
+        padding: 60px 50px;
+        max-width: 520px;
+        width: 90%;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .danger-icon {
+        font-size: 3.2rem;
+        color: var(--danger-color);
+        margin-bottom: 20px;
+    }
+
+    .confirm-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: var(--danger-color);
+    }
+
+    .confirm-desc {
+        color: rgba(255,255,255,0.65);
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 40px;
+    }
+
+    .confirm-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    .btn-cancel {
+        padding: 14px 36px;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255,255,255,0.12);
+        color: #fff;
+    }
+
+    .btn-danger {
+        padding: 14px 40px;
+        border-radius: 40px;
+        border: none;
+        background: linear-gradient(135deg, #ff4444, #ff2222);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(255,68,68,0.4);
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 18px 40px rgba(255,68,68,0.6);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<canvas id="canvas-particles"></canvas>
+
+<header class="header-nav">
+    <div class="brand-logo-static">
+        智能图像<span class="brand-highlight">相似搜索</span>
+    </div>
+
+    <div class="top-right-links">
+        <span style="color: rgba(255,255,255,0.4);">Hi, {{ user.username }}</span>
+        <a href="{% url 'logout_view' %}">退出</a>
+    </div>
+</header>
+
+<div class="upload-container">
+    <div class="confirm-box">
+        <div class="danger-icon">⚠</div>
+        <div class="confirm-title">确认注销账号</div>
+
+        <div class="confirm-desc">
+            该操作将<strong>永久删除</strong>你的账号及所有相关数据，<br>
+            包括历史记录与上传内容，且<strong>无法恢复</strong>。
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="confirm-actions">
+                <a href="{% url 'main_page' %}" class="btn-cancel">我再想想</a>
+                <button type="submit" class="btn-danger">确认删除</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.radius = Math.random() * 1.5;
+        }
+        draw() {
+            ctx.fillStyle = 'rgba(255, 68, 68, 0.25)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+    }
+
+    function init() {
+        particles = [];
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+</script>
+{% endblock %}

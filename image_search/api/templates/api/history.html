@@ -1,0 +1,228 @@
+{% block extra_head %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow-y: auto;
+    }
+
+    /* 顶部导航栏 */
+    .header-nav {
+        padding: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .brand-logo-static {
+        font-size: 1.2rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: #fff;
+    }
+
+    .brand-highlight {
+        background: #ff9000;
+        color: #000;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+        margin-left: 4px;
+    }
+
+    .top-right-links a {
+        color: #888;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s;
+        margin-left: 20px;
+    }
+
+    .top-right-links a:hover {
+        color: #ff9000;
+    }
+
+    /* 主体容器 */
+    .content-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 40px 60px 40px;
+    }
+
+    .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 20px 0 30px 0;
+        color: #ddd;
+    }
+
+    /* 历史记录卡片 */
+    .history-card {
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .history-card:hover {
+        border-color: #ff9000;
+        box-shadow: 0 10px 25px rgba(255,144,0,0.1);
+        transform: translateY(-4px);
+    }
+
+    /* 卡片头部 */
+    .history-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 18px;
+    }
+
+    .query-thumb {
+        width: 90px;
+        height: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #ff9000;
+        background: #000;
+        flex-shrink: 0;
+    }
+
+    .query-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .history-meta {
+        flex: 1;
+    }
+
+    .history-time {
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-bottom: 6px;
+    }
+
+    .history-info {
+        font-size: 0.9rem;
+        color: #ff9000;
+        font-weight: 600;
+    }
+
+    /* 相似结果预览 */
+    .history-results {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 15px;
+    }
+
+    .history-result-img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #222;
+        transition: all 0.25s ease;
+    }
+
+    .history-result-img:hover {
+        border-color: #ff9000;
+        transform: translateY(-4px);
+    }
+
+    .history-result-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* 空状态 */
+    .empty-state {
+        text-align: center;
+        color: #555;
+        padding: 80px 0;
+    }
+
+    /* 底部按钮 */
+    .footer-actions {
+        text-align: center;
+        margin-top: 60px;
+    }
+
+    .btn-back {
+        color: #666;
+        text-decoration: none;
+        border: 1px solid #444;
+        padding: 10px 25px;
+        border-radius: 20px;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        color: #fff;
+        border-color: #ff9000;
+    }
+
+    /* 移动端 */
+    @media (max-width: 768px) {
+        .history-results {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="header-nav">
+    <div class="brand-logo-static">
+        智能图像<span class="brand-highlight">相似搜索</span>
+    </div>
+    <div class="top-right-links">
+        <a href="{% url 'main_page' %}">返回首页</a>
+    </div>
+</header>
+
+<div class="content-wrapper">
+    <div class="page-title">我的搜索历史</div>
+
+    {% for h in histories %}
+    <div class="history-card">
+        <div class="history-header">
+            <div class="query-thumb">
+                <img src="{{ h.query_image }}" alt="Query Image">
+            </div>
+            <div class="history-meta">
+                <div class="history-time">
+                    {{ h.created_at|date:"Y-m-d H:i" }}
+                </div>
+                <div class="history-info">
+                    返回 {{ h.top_k }} 条相似结果
+                </div>
+            </div>
+        </div>
+
+        <div class="history-results">
+            {% for r in h.results|slice:":6" %}
+            <div class="history-result-img">
+                <img src="{{ r.img_url }}" alt="Result">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        您还没有任何搜索记录
+    </div>
+    {% endfor %}
+
+    <div class="footer-actions">
+        <a href="{% url 'main_page' %}" class="btn-back">← 返回上传页面</a>
+    </div>
+</div>
+{% endblock %}

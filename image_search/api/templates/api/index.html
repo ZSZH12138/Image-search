@@ -1,0 +1,245 @@
+{% block extra_head %}
+<style>
+    :root {
+        --primary-color: #ff9000;
+        --bg-dark: #0a0a0a;
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-dark);
+        overflow: hidden; /* 禁止首页滚动，增强沉浸感 */
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* 动态画布背景 */
+    #canvas-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .hero-section {
+        position: relative;
+        z-index: 2; /* 确保内容在粒子上方 */
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        /* 微弱的径向渐变，增加深度感 */
+        background: radial-gradient(circle at center, rgba(255,144,0,0.05) 0%, transparent 70%);
+    }
+
+    /* 入场动画 */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* 标题动画 */
+    .hero-title {
+        font-size: 4.5rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -1px;
+        margin-bottom: 1.5rem;
+        animation: fadeInUp 1s ease-out forwards;
+    }
+
+    .highlight {
+        background: var(--primary-color);
+        color: #000;
+        padding: 0.1em 0.4em;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255, 144, 0, 0.4);
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .highlight:hover {
+        transform: scale(1.05) rotate(-1deg);
+    }
+
+    /* 描述文字动画 */
+    .hero-desc {
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 3rem;
+        max-width: 600px;
+        line-height: 1.6;
+        animation: fadeInUp 1s ease-out 0.3s forwards;
+        opacity: 0; /* 初始隐藏 */
+    }
+
+    /* 按钮组动画 */
+    .btn-group-custom {
+        display: flex;
+        gap: 25px;
+        animation: fadeInUp 1s ease-out 0.6s forwards;
+        opacity: 0;
+    }
+
+    .btn-main {
+        padding: 1rem 3rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-login {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        box-shadow: 0 4px 15px rgba(255, 144, 0, 0.3);
+    }
+
+    .btn-login:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(255, 144, 0, 0.5);
+        background: #ffaa33;
+    }
+
+    .btn-register {
+        background: transparent;
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-register:hover {
+        border-color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+    }
+
+    /* 底部装饰：模糊光晕 */
+    .glow-blob {
+        position: absolute;
+        bottom: -10%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 300px;
+        background: var(--primary-color);
+        filter: blur(150px);
+        opacity: 0.1;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<canvas id="canvas-particles"></canvas>
+
+<div class="hero-section">
+    <div class="glow-blob"></div>
+
+    <h1 class="hero-title">
+        智能图像<span class="highlight">相似搜索</span>
+    </h1>
+
+    <p class="hero-desc">
+        基于深度学习算法，为您从海量图库中<br>
+        精准秒回视觉特征最接近的结果。
+    </p>
+
+    <div class="btn-group-custom">
+        <a href="{% url 'login' %}" class="btn-main btn-login">立即登录</a>
+        <a href="{% url 'register' %}" class="btn-main btn-register">注册账号</a>
+    </div>
+</div>
+
+<script>
+    /**
+     * 简单的神经网络粒子背景脚本
+     */
+    const canvas = document.getElementById('canvas-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = Math.random() * 1.5;
+        }
+
+        draw() {
+            ctx.fillStyle = 'rgba(255, 144, 0, 0.5)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+    }
+
+    function init() {
+        particles = [];
+        for (let i = 0; i < 80; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            
+            // 连线逻辑
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < 150) {
+                    ctx.strokeStyle = `rgba(255, 144, 0, ${1 - dist/150 - 0.5})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+</script>
+{% endblock %}
