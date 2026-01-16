@@ -14,4 +14,4 @@
 
 get_feature.py的my_path变量存储的便是你的图片文件夹路径，运行该文件可以获取所有图片的特征并保存为.npy文件。注意一定要修改my_path路径才可以。
 
-注意：由于文件vit-dinov2-base.npz太大，无法上传至GitHub，如果想要复现实验过程，请将vit-dinov2-base.npz文件添加至api/
+注意：由于文件vit-dinov2-base.npz太大，无法上传至GitHub，如果想要复现实验过程，请将vit-dinov2-base.npz文件添加至本文件夹。
